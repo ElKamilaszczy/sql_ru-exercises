@@ -28,3 +28,22 @@ This is true even if it is sunk.
 Ex. 39.
 Find the ships that `survived for future battles`; that is, after being damaged in a battle, 
 they participated in another one, which occurred later.
+
+with first_dmg as
+(
+select t.*, max(t.rn) over(partition by ship) as mx from
+(
+select ship, battle, "date", result, row_number() over(partition by ship order by "date") as rn
+from outcomes inner join battles on name=battle
+) t
+)
+select fd.ship from first_dmg fd where exists
+(select null from first_dmg fd1 where fd.ship = fd1.ship
+and fd1.result='damaged' and rn <> mx)
+group by fd.ship having count(*) > 1;
+
+--Ships could participate in many battles. Also ship had to be damaged in the midddle of his 'carrer' (exercise assumption).
+
+
+
+
