@@ -1,0 +1,82 @@
+-- Exercise 11 - Computer firm
+
+Select avg(speed) from pc
+
+-- Exercise 12 - 
+
+Select avg(speed) from laptop where price > 1000
+
+-- Exercise 13 
+
+Select avg(speed) from product inner join pc on pc.model = product.model where product.maker='A';
+
+-- Exercise 14 - Ships
+For the ships in the Ships table that have at least 10 guns, get the class, name, and country.
+
+SELECT S.CLASS, s.name, c.country from ships s inner join classes c on s.class = c.class
+where c.numguns >= 10
+
+-- Exercise 15 - Computer firm
+Get hard drive capacities that are identical for two or more PCs
+
+Select hd from pc
+group by hd having count(*) >=2;
+
+-- Exercise 16 - 
+Get pairs of PC models with identical speeds and the same RAM capacity. Each resulting pair should be displayed only once, i.e. (i, j) but not (j, i).
+Result set: model with the bigger number, model with the smaller number, speed, and RAM. 
+
+select distinct p1.model, p2.model, p1.speed, p1.ram
+from pc p1 inner join pc p2 on p1.speed = p2.speed and p1.ram = p2.ram and p1.model > p2.model
+
+-- Exercise 17 - 
+Get the laptop models that have a speed smaller than the speed of any PC.
+Result set: type, model, speed. 
+
+Select distinct p.type, l.model, l.speed from laptop l inner join product p on p.model = l.model where l.speed < all(select speed from pc)
+
+-- Exercise 18 
+Find the makers of the cheapest color printers.
+
+Select distinct p.maker, pr.price from product p
+inner join printer pr on p.model = pr.model
+where pr.color='y' and pr.price = (select min(price) from printer where color ='y')
+
+-- Exercise 19 - 
+
+Select p.maker, avg(l.screen)
+from product p inner join laptop l
+on l.model = p.model
+group by p.maker
+
+-- Exercise 20 - 
+
+select maker, count(distinct model) from product where type='PC'
+group by maker
+having count(distinct model) >= 3
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
