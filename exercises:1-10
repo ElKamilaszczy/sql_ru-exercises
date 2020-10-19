@@ -1,0 +1,88 @@
+-- Exercise 1 - Computer firm
+Find the model number, speed and hard drive capacity for all the PCs with prices below $500.
+Result set: model, speed, hd.
+
+Select model, speed, hd from pc where price < 500
+
+-- Exercise 2 - Computer firm
+List all printer makers. Result set: maker.
+
+select distinct maker from product where type = 'Printer';
+
+Descrpition: Why this way? We need to consider a situation, when there is a model in Product table, but there isnt one in Printer table (one-to-many relation).
+
+-- Exercise 3 -  Computer firm
+Find the model number, RAM and screen size of the laptops with prices over $1000. 
+
+select model, ram, screen from laptop where price > 1000
+
+-- Exercise 4 - Computer firm
+
+Select * from printer where color='y';
+
+-- Exercise 5 - Computer firm
+
+Select model, speed, hd from pc
+where price < 600 and cd in ('12x', '24x');
+
+-- Exercise 6 - Computer firm
+For each maker producing laptops with a hard drive capacity of 10 Gb or higher, find the speed of such laptops. Result set: maker, speed.
+
+Select distinct pro.maker, l.speed
+from product pro inner join laptop l on l.model = pro.model
+where l.hd >= 10
+
+-- Exercise 7 - Computer firm
+Get the models and prices for all commercially available products (of any type) produced by maker B. 
+
+Select distinct d.model, d.price
+from product p
+inner join (
+select model, price from pc
+union all
+select model, price from laptop
+union all
+select model, price from printer
+) d on p.model = d.model
+where p.maker='B';
+
+-- Exercise 8 - Computer firm
+Find the makers producing PCs but not laptops. 
+
+select distinct p1.maker from product p1
+where not exists
+(select null from product p
+where p.maker = p1.maker and p.type = 'Laptop')
+and exists
+(select null from product p where p.maker = p1.maker
+and p.type='PC')
+
+-- Exercise 9 - 
+Find the makers of PCs with a processor speed of 450 MHz or more. Result set: maker.
+
+select maker from product inner join pc on product.model = pc.model where pc.speed >= 450
+group by maker
+
+
+-- Exercise 10 - 
+Find the printer models having the highest price. Result set: model, price.
+
+Select model, price from printer
+where price = (select max(price) from printer)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
