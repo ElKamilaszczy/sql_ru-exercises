@@ -34,3 +34,63 @@ and (numGuns is null or numGuns >=9)
 and (bore is null or bore < 19)
 and (displacement is null or displacement<= 65000) 
 
+-- Exercise 53 - Ships
+With a precision of two decimal places, determine the average number of guns for the battleship classes. 
+
+Select cast(avg(cast(numGuns as decimal(5,2))) as decimal(5,2)) from classes
+where type = 'bb'
+
+-- Exercise 54 - Ships
+With a precision of two decimal places, determine the average number of guns for all battleships (including the ones in the Outcomes table).
+
+with all_ships as (
+select s.name, cast(c.numGuns as decimal(5, 2)) as numGuns from ships s inner join classes c on c.class = s.class
+where c.type = 'bb'
+union
+select c.class, cast(c.numGuns as decimal(5, 2)) as numGuns from classes c inner join outcomes o on o.ship = c.class
+where c.type = 'bb'
+)
+select cast(avg(numGuns) as decimal(4,2)) from all_ships
+
+-- Exercise 55 - Ships
+For each class, determine the year the first ship of this class was launched.
+If the lead ship’s year of launch is not known, get the minimum year of launch for the ships of this class.
+
+Select c.class, min(s.launched) from ships s right join classes c on c.class = s.class
+group by c.class
+
+-- Exercise 56 - Ships
+For each class, find out the number of ships of this class that were sunk in battles. 
+
+-- Exercise 57 - Ships
+
+-- Exercise 58 - Ships
+
+-- Exercise 59 - Ships
+
+-- Exercise 60 - Ships
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
