@@ -671,3 +671,43 @@ Note: If there is no income/outcome, output 0.
 /* 155
 Assuming there is no flight number greater than 65535, display the flight number and its binary representation (without leading zeroes). 
 */
+WITH nums AS
+(
+	SELECT 1 AS num
+	UNION ALL
+	SELECT num * 2 FROM nums
+	where num * 2 < 65535
+), resultset AS
+(
+	SELECT t.trip_no, n.num, CAST(t.trip_no & n.num AS bit) as val FROM nums n CROSS JOIN Trip t
+)
+, resultsetX2 AS
+(
+	SELECT r.trip_no, STRING_AGG(CAST(r.val AS char(1)), '') WITHIN GROUP(ORDER BY r.num DESC) AS num FROM resultset r
+	GROUP BY r.trip_no
+) SELECT r.trip_no, SUBSTRING(r.num, CHARINDEX('1', r.num, 1), LEN(r.num) - CHARINDEX('1', r.num, 1) + 1) FROM resultsetX2 r
+--Another one - the best in performance
+SELECT t.trip_no,
+CAST(
+	CONCAT(
+		t.trip_no / POWER(2,16) % 2,
+		t.trip_no / POWER(2,15) % 2,
+		t.trip_no / POWER(2,14) % 2,
+		t.trip_no / POWER(2,13) % 2,
+		t.trip_no / POWER(2,12) % 2,
+		t.trip_no / POWER(2,11) % 2,
+		t.trip_no / POWER(2,10) % 2,
+		t.trip_no / POWER(2,9) % 2,
+		t.trip_no / POWER(2,8) % 2,
+		t.trip_no / POWER(2,7) % 2,
+		t.trip_no / POWER(2,6) % 2,
+		t.trip_no / POWER(2,5) % 2,
+		t.trip_no / POWER(2,4) % 2,
+		t.trip_no / POWER(2,3) % 2,
+		t.trip_no / POWER(2,2) % 2,
+		t.trip_no / POWER(2,1) % 2,
+		t.trip_no / POWER(2,0) % 2
+	)
+	AS decimal
+) 
+FROM Trip t
