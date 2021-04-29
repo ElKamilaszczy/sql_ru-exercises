@@ -708,6 +708,6 @@ CAST(
 		t.trip_no / POWER(2,1) % 2,
 		t.trip_no / POWER(2,0) % 2
 	)
-	AS decimal
+	AS decimal -- Cast to number datatype so leading zeroes will be ommitted
 ) 
 FROM Trip t
