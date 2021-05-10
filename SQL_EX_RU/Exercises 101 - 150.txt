@@ -217,12 +217,61 @@ The PFAS Museum Director elections are held in leap years only, on the first Tue
 For each date from the Battles table, determine the closest election date following it.
 Output: battle name, date of battle, election date. Note: output format for dates should be "yyyy-mm-dd". 
 */
+-- Surely this solution can be optimized -- 
+WITH min_max_dts AS
+(
+	SELECT MIN(b.date) AS min_date, MAX(b.date) AS max_date FROM Battles b
+),
+nums1 AS (SELECT 1 AS n FROM (VALUES(1), (1), (1), (1)) AS d(n)),
+nums2 AS (SELECT 1 AS n FROM nums1 n1 CROSS JOIN nums1 n2),
+nums3 AS (SELECT 1 AS n FROM nums2 n1 CROSS JOIN nums2 n2),
+nums AS (SELECT ROW_NUMBER() OVER(ORDER BY (SELECT NULL)) AS num FROM nums3),
+gen_nums AS (SELECT n.num FROM nums n JOIN min_max_dts mmd ON n.num <= YEAR(mmd.max_date) - YEAR(mmd.min_date) + 4),
+leap_years AS (
+	SELECT mmd.min_date, gn1.num - 1 AS num FROM min_max_dts mmd
+	JOIN gen_nums gn1 ON (YEAR(mmd.min_date) + gn1.num - 1) % 4 = 0 AND (NOT ((YEAR(mmd.min_date) + gn1.num - 1) % 100 = 0)) OR ((YEAR(mmd.min_date) + gn1.num - 1) % 400 = 0) 
+), days AS
+( SELECT *, DATEFROMPARTS(YEAR(mmd.min_date) + mmd.num, 4, gn2.numeq) AS dtfromparts FROM leap_years mmd
+	CROSS APPLY (
+		SELECT TOP (1) gn.num + 1 AS numeq FROM nums gn 
+		WHERE  gn.num <= 10  AND DATENAME(WEEKDAY, DATEFROMPARTS(YEAR(mmd.min_date) + mmd.num, 4, gn.num)) = 'Monday'
+		ORDER BY DATEFROMPARTS(YEAR(mmd.min_date) + mmd.num, 4, gn.num)
+	) AS gn2
+)
+SELECT b.name, CONVERT(date, b.date,20), d.dtfromparts FROM Battles b 
+CROSS APPLY (
+	SELECT TOP(1) * FROM days d
+	WHERE b.date < d.dtfromparts
+	ORDER BY d.dtfromparts ASC
+	) AS d
+
 
 /* 119
 Group all paintings by days, months and years separately. The group identifiers should be "yyyy" for years, "yyyy-mm" for months and "yyyy-mm-dd" for days.
 Displayed should be only groups with more than 10 distinct moments of time (b_datetime) at which paintings have occurred.
 Result set: group identifier, total quantity of paint used within a group.
 */
+
+WITH resultset AS (
+SELECT
+	 CASE GROUPING_ID(YEAR(b.B_DATETIME),MONTH(b.B_DATETIME),DAY(b.B_DATETIME)) 
+	 -- WHEN 1 then DAY is NULL then grouping by year and month 
+		WHEN 0 THEN 
+		CONCAT(YEAR(b.B_DATETIME),'-',CASE WHEN MONTH(b.B_DATETIME) < 10 THEN '0' ELSE NULL END, MONTH(b.B_DATETIME), '-',
+			CASE WHEN DAY(b.B_DATETIME) < 10 THEN '0' ELSE NULL END, DAY(b.B_DATETIME))
+		WHEN 1 THEN CONCAT(YEAR(b.B_DATETIME),'-',CASE WHEN MONTH(b.B_DATETIME) < 10 THEN '0' ELSE NULL END, MONTH(b.B_DATETIME))
+		WHEN 3 THEN CAST(YEAR(b.B_DATETIME) AS varchar)
+	 END AS dt,
+SUM(b.B_VOL) AS vol, COUNT(DISTINCT b.b_DATETIME) AS cnt   FROM utB b
+GROUP BY GROUPING SETS
+(
+	(YEAR(b.B_DATETIME)), --by year
+	(YEAR(b.B_DATETIME), MONTH(b.B_DATETIME)), -- year/month
+	(YEAR(b.B_DATETIME), MONTH(b.B_DATETIME), DAY(b.B_DATETIME))
+)
+)
+SELECT r.dt, r.vol FROM resultset r
+WHERE r.cnt > 10
 
 /* 120
 For each airline that has transported at least one passenger, calculate the arithmetic, geometric, quadratic and harmonic means of its respective planes’ flight durations (in minutes) with an accuracy of two decimal places. In addition, output the aforementioned characteristics for all flights in a separate line, using the word ‘TOTAL’ as the airline name.
@@ -444,6 +493,12 @@ Find the IDs of the squares that still AREN’T white after all of the paint has
 /* 135
 For each one-hour interval starting on the hour during which squares were dyed, determine the last moment of a painting event (B_DATETIME).
 */
+
+SELECT MAX(b_datetime) FROM utB
+GROUP BY CAST(CONVERT(varchar, b_datetime, 112) + ' '+LEFT(CONVERT(varchar, B_DATETIME, 114), 2) + ':00' AS datetime2)
+-- Forgot about DATEPART function
+SELECT MAX(b_datetime) FROM utB
+GROUP BY CAST(B_DATETIME AS date), DATEPART(HOUR, B_DATETIME)
 
 /* 136
 For each ship in the Ships table whose name contains symbols that aren't letters of the English alphabet, display its name, the position of the first such non-alphabetic character, and the character itself. 
