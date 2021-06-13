@@ -387,7 +387,30 @@ For the sequence of passengers ordered by id_psg find out the ones having the ma
 The first passenger in the sequence is preceded by the last one, and the last passenger is followed by the first one.
 For each passenger meeting the aforementioned criterion, display his/her name, the name of the previous passenger, and the name of the next passenger.
 */
-
+-- Solution which really needs to be optimalized (filtering phrase is at the end so I should try to push it earlier).
+WITH min_max AS (
+	SELECT MIN(id_psg) AS min_psg, MAX(id_psg) AS max_psg FROM Passenger
+),
+data AS
+(
+SELECT p.ID_psg, p.name, 
+	DENSE_RANK() OVER(ORDER BY COUNT(*) DESC) AS cnt, 
+	LAG(p.name, 1, (
+		SELECT p1.name from Passenger p1 where p1.id_psg = (
+			SELECT max_psg FROM min_max)
+			)
+		) 
+	OVER(ORDER by p.id_psg) AS prev, 
+	LEAD(p.name, 1, (
+		SELECT p1.name from Passenger p1 where p1.id_psg = (
+			SELECT min_psg FROM min_max)
+			)
+		) 
+	OVER(ORDER BY p.id_psg) AS nxt  
+	FROM Pass_in_trip pit RIGHT JOIN Passenger p ON p.ID_psg = pit.ID_psg
+GROUP BY p.ID_psg, p.name
+)
+SELECT d.name, d.prev, d.nxt FROM data d WHERE cnt = 1;
 /* 127
 Find out the arithmetic mean (rounded to hundredths) of the following prices:
 1. Price of the cheapest Laptops produced by makers of PCs with the lowest CD-ROM speed;
